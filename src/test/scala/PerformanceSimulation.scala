@@ -14,17 +14,17 @@ class PerformanceSimulation extends Simulation {
             "cartEventType" : "ADD_ITEM",
             "userId" : 1,
             "productId" : "SKU-12464",
-            "quantity" : 1
+            "quantity" : 50
           }
         """
 
     val users = csv("user_credentials.csv").queue
 
-    val hostIp = "http://10.100.201.102"
+    val hostIp = "http://localhost"
 
     val scn = scenario("Performance simulation")
-        .repeat(1) {
-            pause(2 seconds)
+        .repeat(30) {
+            //pause(20 seconds)
                 feed(users)
                 .exec(
                     http("Perform login")
@@ -53,12 +53,15 @@ class PerformanceSimulation extends Simulation {
                 .exec(
                     http("Perform the checkout process")
                         .post(hostIp + ":8957/v1/checkout")
+                        // .post(hostIp + ":8957/v1/checkout/orchestrated")
                         .header("Authorization", "Bearer ${accessToken}")
                         .header("Content-Type", "application/json")
                         .check(status is 200)
                 )
+                //.pause(5 seconds)
+                .pause(8 seconds)
         }
 
-    setUp(scn.inject(atOnceUsers(1))).protocols(httpProtocol)
+    setUp(scn.inject(atOnceUsers(50))).protocols(httpProtocol)
 
 }
